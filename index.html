@@ -185,7 +185,7 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 /* ── Modal ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(8,6,2,.55);z-index:100;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;backdrop-filter:blur(5px)}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:26px;padding:30px;max-width:620px;width:100%;position:relative;margin:auto;box-shadow:var(--shadow-lg)}
+.modal{background:var(--surface);border-radius:26px;padding:30px;max-width:620px;width:100%;position:relative;margin:auto;box-shadow:var(--shadow-lg);overflow:hidden}
 .modal h2{font-size:18px;font-weight:700;margin-bottom:20px;letter-spacing:-.3px}
 .modal-close{position:absolute;top:18px;left:18px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;color:var(--text2);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:14px}
 .modal-close:hover{background:var(--border);color:var(--text)}
@@ -201,7 +201,7 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 .icard-label{font-size:11px;color:var(--text2);font-weight:500}
 .icard-sub{font-size:10px;color:var(--text3);margin-top:2px}
 .mcharts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
-.mchartbox{background:var(--surface2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--border)}
+.mchartbox{background:var(--surface2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--border);min-width:0;overflow:hidden}
 .mchartbox.full{grid-column:1/-1}
 .mchartbox-title{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
 .conclusion-box{background:linear-gradient(140deg,#1c2e20,#2a4520);color:#fff;border-radius:var(--r-sm);padding:18px 20px}
@@ -310,9 +310,9 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
   <h2>📊 סיכום כל התקופה</h2>
   <div class="insight-grid" id="insightGrid"></div>
   <div class="mcharts">
-    <div class="mchartbox full"><div class="mchartbox-title">סיבות עיקריות</div><div style="position:relative;height:190px"><canvas id="mReasonChart"></canvas></div></div>
-    <div class="mchartbox"><div class="mchartbox-title">איפה?</div><div style="position:relative;height:180px"><canvas id="mPlaceChart"></canvas></div></div>
-    <div class="mchartbox"><div class="mchartbox-title">שעות ביום</div><div style="position:relative;height:180px"><canvas id="mHourChart"></canvas></div></div>
+    <div class="mchartbox full"><div class="mchartbox-title">סיבות עיקריות</div><div style="position:relative;height:160px;width:100%"><canvas id="mReasonChart"></canvas></div></div>
+    <div class="mchartbox"><div class="mchartbox-title">איפה?</div><div style="position:relative;height:150px;width:100%"><canvas id="mPlaceChart"></canvas></div></div>
+    <div class="mchartbox"><div class="mchartbox-title">שעות ביום</div><div style="position:relative;height:150px;width:100%"><canvas id="mHourChart"></canvas></div></div>
   </div>
   <div class="conclusion-box" id="conclusionBox"></div>
 </div>
