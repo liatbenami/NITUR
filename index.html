@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניטור צריכה חכם</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',sans-serif;background:#f5f4f0;color:#1a1a1a;direction:rtl;min-height:100vh}
+
+/* Landing */
+#landingScreen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+.landing-icon{font-size:48px;margin-bottom:16px}
+.landing-title{font-size:32px;font-weight:700;margin-bottom:8px}
+.landing-sub{font-size:15px;color:#888;margin-bottom:36px;max-width:480px;line-height:1.7}
+.url-box{background:#fff;border-radius:18px;padding:28px;max-width:560px;width:100%;border:1px solid #e8e6e1;text-align:right;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.url-label{font-size:13px;font-weight:600;color:#444;margin-bottom:10px}
+.url-input-row{display:flex;gap:10px;margin-bottom:14px}
+#urlInput{flex:1;font-family:'Heebo',sans-serif;font-size:13px;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fafafa;color:#1a1a1a;direction:ltr;text-align:left;transition:border-color .2s}
+#urlInput:focus{outline:none;border-color:#3b82f6;background:#fff}
+.load-btn{font-family:'Heebo',sans-serif;font-size:14px;font-weight:600;padding:11px 22px;border-radius:10px;cursor:pointer;background:#3b82f6;color:#fff;border:none;white-space:nowrap;transition:background .15s}
+.load-btn:hover{background:#2563eb}
+.load-btn:disabled{background:#93c5fd;cursor:not-allowed}
+.hint-box{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;font-size:12px;color:#1e40af;line-height:1.7;text-align:right;margin-bottom:10px}
+.hint-box strong{font-weight:600}
+.demo-btn{font-family:'Heebo',sans-serif;font-size:13px;color:#3b82f6;background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:8px;display:block;text-align:center}
+.demo-btn:hover{color:#1d4ed8}
+#errorMsg{font-size:13px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-top:12px;display:none;line-height:1.5}
+#loadingArea{margin-top:16px;display:none;text-align:center}
+.spinner{width:32px;height:32px;border:3px solid #e0e7ff;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-step{font-size:13px;color:#666}
+
+/* Dashboard */
+#dashScreen{display:none;padding:28px 24px}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+h1{font-size:24px;font-weight:700}
+.subtitle{font-size:13px;color:#888;margin-bottom:20px}
+.filter-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;background:#fff;border-radius:12px;padding:12px 16px;border:1px solid #e8e6e1}
+.filter-row label{font-size:13px;color:#666;font-weight:500}
+input[type=date]{font-family:'Heebo',sans-serif;font-size:13px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;background:#fafafa;color:#1a1a1a;min-width:140px}
+input[type=date]:focus{outline:none;border-color:#3b82f6}
+.btn{font-family:'Heebo',sans-serif;font-size:13px;font-weight:500;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .15s;border:1px solid #ddd;background:#fff;color:#333}
+.btn:hover{background:#f0f0f0}
+.btn.primary{background:#3b82f6;color:#fff;border-color:#3b82f6}.btn.primary:hover{background:#2563eb}
+.btn.purple{background:#7c3aed;color:#fff;border-color:#7c3aed}.btn.purple:hover{background:#6d28d9}
+.btn.gray{font-size:12px;color:#999;border-color:#e0e0e0}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.card{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid #e8e6e1}
+.card-label{font-size:11px;color:#999;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.card-value{font-size:30px;font-weight:700;color:#1a1a1a;line-height:1}
+.card-sub{font-size:11px;color:#bbb;margin-top:4px}
+.card.blue{background:#eff6ff;border-color:#bfdbfe}.card.blue .card-value{color:#1d4ed8}
+.card.purple{background:#f5f3ff;border-color:#ddd6fe}.card.purple .card-value{color:#6d28d9}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-box{background:#fff;border-radius:12px;padding:18px;border:1px solid #e8e6e1}
+.chart-box.full{grid-column:1/-1}
+.chart-title{font-size:13px;font-weight:600;color:#555;margin-bottom:12px}
+.week-nav{display:flex;align-items:center;gap:10px}
+.week-nav button{font-size:18px;border:none;background:none;cursor:pointer;color:#3b82f6;padding:0 4px}
+.week-label{font-size:17px;color:#1a1a1a;font-weight:700;min-width:130px;text-align:center}
+#nextWeekLabel{font-size:14px;color:#3b82f6;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px;min-width:110px;text-align:right}
+.legend-row{display:flex;gap:16px;margin-top:10px;font-size:12px;color:#888;flex-wrap:wrap}
+.legend-dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-left:4px;vertical-align:middle}
+.analysis-section{margin-top:18px}
+.analysis-title{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid #3b82f6}
+.high-day-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.hcard{background:#fff8f0;border:1px solid #fbd38d;border-radius:10px;padding:12px 14px}
+.hcard.alert{background:#fff0f0;border-color:#fc8181}
+.hcard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.hcard-date{font-size:14px;font-weight:700}
+.hcard-count{font-size:20px;font-weight:700;color:#c05621}
+.hcard-pct{font-size:11px;background:#fed7aa;color:#9c4221;border-radius:4px;padding:2px 6px;font-weight:600}
+.hcard-desc{font-size:12px;color:#555;line-height:1.5;margin-top:4px}
+.pattern-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.pcard{border-radius:10px;padding:12px 14px;border:1px solid}
+.pcard.blue{background:#eff6ff;border-color:#bfdbfe}
+.pcard.purple{background:#f5f3ff;border-color:#ddd6fe}
+.pcard.amber{background:#fffbeb;border-color:#fde68a}
+.pcard.rose{background:#fff1f2;border-color:#fecdd3}
+.pcard.teal{background:#f0fdfa;border-color:#99f6e4}
+.pcard-icon{font-size:18px;margin-bottom:4px}
+.pcard-title{font-size:12px;font-weight:700;margin-bottom:3px}
+.pcard-desc{font-size:11px;color:#555;line-height:1.5}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px;max-width:620px;width:100%;position:relative;margin:auto}
+.modal h2{font-size:18px;font-weight:700;margin-bottom:16px}
+.modal-close{position:absolute;top:14px;left:14px;font-size:20px;background:none;border:none;cursor:pointer;color:#aaa}
+.modal-close:hover{color:#333}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.icard{border-radius:10px;padding:11px 13px;border:1px solid}
+.icard.blue{background:#eff6ff;border-color:#bfdbfe}
+.icard.amber{background:#fffbeb;border-color:#fde68a}
+.icard.rose{background:#fff1f2;border-color:#fecdd3}
+.icard.green{background:#f0fdf4;border-color:#bbf7d0}
+.icard.purple{background:#f5f3ff;border-color:#ddd6fe}
+.icard.teal{background:#f0fdfa;border-color:#99f6e4}
+.icard-num{font-size:20px;font-weight:700;margin-bottom:2px}
+.icard-label{font-size:11px;color:#666;font-weight:500}
+.icard-sub{font-size:10px;color:#999;margin-top:2px}
+.mcharts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.mchartbox{background:#f8f8f8;border-radius:10px;padding:12px}
+.mchartbox.full{grid-column:1/-1}
+.mchartbox-title{font-size:11px;font-weight:600;color:#555;margin-bottom:8px}
+.conclusion-box{background:#1e1b4b;color:#fff;border-radius:10px;padding:14px 16px}
+.conclusion-title{font-size:12px;font-weight:700;color:#c4b5fd;margin-bottom:8px}
+.ci{font-size:11px;color:#e0e7ff;margin-bottom:6px;padding-right:12px;position:relative;line-height:1.5}
+.ci::before{content:'◆';position:absolute;right:0;color:#7c3aed;font-size:8px;top:3px}
+@media(max-width:700px){.charts-grid,.mcharts,.insight-grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.chart-box.full,.mchartbox.full{grid-column:1/-1}}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landingScreen">
+  <div class="landing-icon">🌿</div>
+  <div class="landing-title">ניטור צריכה חכם</div>
+  <div class="landing-sub">הדביקי את הקישור לגיליון Google Sheets שלך וקבלי דשבורד ניתוחי מלא — אוטומטית</div>
+
+  <div class="url-box">
+    <div class="url-label">קישור ל-Google Sheets</div>
+    <div class="url-input-row">
+      <input id="urlInput" type="text" placeholder="https://docs.google.com/spreadsheets/d/..." />
+      <button class="load-btn" id="loadBtn" onclick="loadSheet()">טען ›</button>
+    </div>
+    <div class="hint-box">
+      <strong>לפני הטעינה:</strong> ודאי שהגיליון ציבורי<br>
+      Google Sheets → Share → Anyone with the link → Viewer
+    </div>
+    <div id="errorMsg"></div>
+    <div id="loadingArea">
+      <div class="spinner"></div>
+      <div class="loading-step" id="loadingStep">מתחבר לגיליון...</div>
+    </div>
+    <button class="demo-btn" onclick="loadDemo()">טעני את גיליון הדמו שלי</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashScreen">
+  <div class="dash-header">
+    <h1>ניטור צריכה חכם 🌿</h1>
+    <button class="btn gray" onclick="backToLanding()">← החלף קובץ</button>
+  </div>
+  <p class="subtitle" id="dashSubtitle"></p>
+
+  <div class="filter-row">
+    <label>מתאריך:</label>
+    <input type="date" id="dateFrom">
+    <label>עד:</label>
+    <input type="date" id="dateTo">
+    <button class="btn primary" onclick="applyFilter()">עדכן</button>
+    <button class="btn" onclick="resetDates()">הכל</button>
+    <button class="btn purple" onclick="openSummary()">📊 סיכום תקופה</button>
+  </div>
+
+  <div class="cards">
+    <div class="card blue"><div class="card-label">ממוצע ליום</div><div class="card-value" id="avgDay">—</div><div class="card-sub">סיגריות</div></div>
+    <div class="card"><div class="card-label">סה״כ סשנים</div><div class="card-value" id="totalSessions">—</div><div class="card-sub">בטווח הנבחר</div></div>
+    <div class="card"><div class="card-label">ימי מעקב</div><div class="card-value" id="totalDays">—</div><div class="card-sub">ימים</div></div>
+    <div class="card purple"><div class="card-label">סה״כ שבוע</div><div class="card-value" id="weekTotal">—</div><div class="card-sub">סיגריות</div></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-box full">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="chart-title" style="margin-bottom:0">צריכה שבועית</div>
+        <div class="week-nav">
+          <button onclick="prevWeek()">‹</button>
+          <span class="week-label" id="weekLabel"></span>
+          <button onclick="nextWeek()">›</button>
+          <span id="nextWeekLabel" onclick="nextWeek()"></span>
+        </div>
+      </div>
+      <div style="position:relative;height:260px"><canvas id="weekChart"></canvas></div>
+      <div class="legend-row">
+        <span><span class="legend-dot" style="background:#3b82f6"></span>יש נתונים</span>
+        <span><span class="legend-dot" style="background:#e5e7eb"></span>אין נתונים</span>
+        <span><span class="legend-dot" style="background:rgba(245,166,35,.4)"></span>מחוץ לטווח</span>
+      </div>
+      <div id="highDaySection"></div>
+      <div id="patternSection"></div>
+    </div>
+    <div class="chart-box"><div class="chart-title" id="reasonTitle">סיבות עיקריות</div><div style="position:relative;height:240px"><canvas id="reasonChart"></canvas></div></div>
+    <div class="chart-box"><div class="chart-title" id="placeTitle">איפה?</div><div style="position:relative;height:240px"><canvas id="placeChart"></canvas></div></div>
+    <div class="chart-box full"><div class="chart-title" id="hourTitle">שעות ביום</div><div style="position:relative;height:190px"><canvas id="hourChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeSummary()">
+<div class="modal">
+  <button class="modal-close" onclick="closeSummary()">✕</button>
+  <h2>📊 סיכום כל התקופה</h2>
+  <div class="insight-grid" id="insightGrid"></div>
+  <div class="mcharts">
+    <div class="mchartbox full"><div class="mchartbox-title">סיבות עיקריות</div><div style="position:relative;height:190px"><canvas id="mReasonChart"></canvas></div></div>
+    <div class="mchartbox"><div class="mchartbox-title">איפה?</div><div style="position:relative;height:180px"><canvas id="mPlaceChart"></canvas></div></div>
+    <div class="mchartbox"><div class="mchartbox-title">שעות ביום</div><div style="position:relative;height:180px"><canvas id="mHourChart"></canvas></div></div>
+  </div>
+  <div class="conclusion-box" id="conclusionBox"></div>
+</div>
+</div>
+
+<script>
+const DEMO_SHEET_ID='1Ps3MCS3vcQys6Zz_wStw0NuEWB_Kabb9G9-sMEzwvkA';
+const CHART_COLORS=['#3b82f6','#f97316','#a855f7','#ef4444','#14b8a6','#f59e0b','#ec4899','#6366f1','#22c55e','#0ea5e9'];
+const DAY_HE=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+
+let RAW={},ROWS=[],ALL_DATES=[];
+let filterFrom='',filterTo='';
+let currentWeekStart=null;
+let weekChart,reasonChart,placeChart,hourChart,mReasonChart,mPlaceChart,mHourChart;
+
+// ── URL helpers ───────────────────────────────────────────────────────────────
+function extractSheetId(url){
+  const m=url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return m?m[1]:null;
+}
+function extractGid(url){
+  const m=url.match(/[#&?]gid=(\d+)/);
+  return m?m[1]:'0';
+}
+
+// ── Load Sheet ─────────────────────────────────────────────────────────────────
+async function loadSheet(){
+  const raw=document.getElementById('urlInput').value.trim();
+  if(!raw){showError('אנא הכניסי קישור לגיליון');return;}
+  const id=extractSheetId(raw);
+  if(!id){showError('הקישור לא נראה תקין. ודאי שזה קישור Google Sheets');return;}
+  const gid=extractGid(raw);
+  const csvUrl=`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  await fetchAndProcess(csvUrl);
+}
+
+function loadDemo(){
+  document.getElementById('urlInput').value=`https://docs.google.com/spreadsheets/d/${DEMO_SHEET_ID}/edit`;
+  loadSheet();
+}
+
+function setStep(msg){document.getElementById('loadingStep').textContent=msg;}
+
+async function fetchAndProcess(csvUrl){
+  hideError();
+  document.getElementById('loadingArea').style.display='block';
+  document.getElementById('loadBtn').disabled=true;
+  setStep('מתחבר לגיליון...');
+
+  const PROXIES=[
+    u=>'https://corsproxy.io/?'+encodeURIComponent(u),
+    u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+  ];
+
+  let csvText='';
+  let lastErr='';
+
+  for(const proxy of PROXIES){
+    try{
+      setStep('שולף נתונים מהגיליון...');
+      const res=await fetch(proxy(csvUrl));
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const text=await res.text();
+      if(text.includes('Sign in')||text.trim().startsWith('<!DOCTYPE'))
+        throw new Error('הגיליון פרטי — שנה ל-Anyone with the link');
+      if(text.length<10) throw new Error('EMPTY');
+      csvText=text;
+      break;
+    }catch(e){ lastErr=e.message; }
+  }
+
+  if(!csvText){
+    document.getElementById('loadBtn').disabled=false;
+    document.getElementById('loadingArea').style.display='none';
+    showError('שגיאה בטעינה: '+lastErr+'. ודאי שהגיליון ציבורי ונסי שוב.');
+    return;
+  }
+
+  setStep('מנתח נתונים...');
+  processCSV(csvText, csvUrl);
+}
+
+// ── Parse CSV ─────────────────────────────────────────────────────────────────
+function processCSV(csvText, sourceUrl){
+  // Clean up: remove markdown code fences if Claude wrapped it
+  csvText=csvText.replace(/^```[^\n]*\n?/,'').replace(/\n?```$/,'').trim();
+
+  const parsed=Papa.parse(csvText,{header:true,skipEmptyLines:true,dynamicTyping:false});
+  if(!parsed.data||!parsed.data.length){
+    showError('הגיליון נראה ריק או בפורמט לא מוכר.');
+    document.getElementById('loadBtn').disabled=false;
+    document.getElementById('loadingArea').style.display='none';
+    return;
+  }
+
+  const cols=parsed.meta.fields;
+  // Auto-detect columns
+  const find=(kws)=>cols.find(c=>kws.some(k=>c.toLowerCase().includes(k)))||cols[0];
+  const dateCol=find(['יום','date','תאריך','day']);
+  const qtyCol=find(['כמות','qty','amount','count','כמה']);
+  const whyCol=find(['למה','why','reason','סיבה']);
+  const whereCol=find(['איפה','where','location','מיקום']);
+  const hourCol=find(['שעה','hour','time','זמן']);
+  const sitCol=find(['סיטואציה','situation','sit','הקשר','context']);
+
+  RAW={};ROWS=[];ALL_DATES=[];
+
+  parsed.data.forEach(r=>{
+    const date=parseDate(r[dateCol]);
+    if(!date) return;
+    const qty=parseFloat(r[qtyCol])||1;
+    const why=r[whyCol]||null;
+    const where=r[whereCol]||null;
+    const sit=r[sitCol]||null;
+    let hour=null;
+    if(hourCol&&r[hourCol]){
+      const hStr=String(r[hourCol]);
+      const hm=hStr.match(/(\d{1,2})[:h.]/);
+      if(hm) hour=parseInt(hm[1]);
+      else if(/^\d{1,2}$/.test(hStr.trim())) hour=parseInt(hStr);
+    }
+    ROWS.push({date,qty,why,where,hour,sit});
+    RAW[date]=(RAW[date]||0)+qty;
+  });
+
+  ALL_DATES=Object.keys(RAW).sort();
+  if(!ALL_DATES.length){
+    showError('לא נמצאו נתונים תקינים בגיליון. בדקי שעמודת התאריך מכילה תאריכים.');
+    document.getElementById('loadBtn').disabled=false;
+    document.getElementById('loadingArea').style.display='none';
+    return;
+  }
+
+  filterFrom=ALL_DATES[0];
+  filterTo=ALL_DATES[ALL_DATES.length-1];
+  document.getElementById('dateFrom').value=filterFrom;
+  document.getElementById('dateTo').value=filterTo;
+  document.getElementById('dateFrom').min=filterFrom;
+  document.getElementById('dateTo').max=filterTo;
+
+  const d0=toDate(filterFrom),d1=toDate(filterTo);
+  document.getElementById('dashSubtitle').textContent=
+    `מעקב אישי — ${fmtShort(d0)} עד ${fmtShort(d1)} · ${ALL_DATES.length} ימים · ${ROWS.length} סשנים`;
+
+  destroyCharts();
+  initCharts();
+
+  document.getElementById('loadingArea').style.display='none';
+  document.getElementById('loadBtn').disabled=false;
+  document.getElementById('landingScreen').style.display='none';
+  document.getElementById('dashScreen').style.display='block';
+
+  currentWeekStart=getSunday(toDate(filterFrom));
+  updateCards();
+  renderWeek();
+}
+
+function parseDate(raw){
+  if(!raw) return null;
+  raw=String(raw).trim();
+  let m=raw.match(/^(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?$/);
+  if(m){const y=m[3]?(m[3].length===2?'20'+m[3]:m[3]):'2026';return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+  m=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m=raw.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+  if(m){const y=m[3]?(m[3].length===2?'20'+m[3]:m[3]):'2026';return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+  const n=parseFloat(raw);
+  if(!isNaN(n)&&n>40000&&n<50000){const d=new Date((n-25569)*86400000);return toStr(d);}
+  const dt=new Date(raw);
+  if(!isNaN(dt.getTime())) return toStr(dt);
+  return null;
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function showError(msg){
+  const el=document.getElementById('errorMsg');
+  el.innerHTML=msg;el.style.display='block';
+  document.getElementById('loadingArea').style.display='none';
+}
+function hideError(){document.getElementById('errorMsg').style.display='none';}
+function backToLanding(){
+  document.getElementById('landingScreen').style.display='flex';
+  document.getElementById('dashScreen').style.display='none';
+  destroyCharts();
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+function toDate(s){const[y,m,d]=s.split('-');return new Date(+y,+m-1,+d);}
+function toStr(dt){return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
+function getSunday(dt){const d=new Date(dt);d.setDate(d.getDate()-d.getDay());return d;}
+function addDays(dt,n){const d=new Date(dt);d.setDate(d.getDate()+n);return d;}
+function fmtShort(dt){return `${dt.getDate()}/${dt.getMonth()+1}`;}
+
+// ── Normalize ─────────────────────────────────────────────────────────────────
+function nWhy(w){
+  if(!w||w==='null') return null; w=String(w).trim();
+  if(/ליווי|ללוות/.test(w)) return 'ליווי';
+  if(/סתם|אוטומט|שעמום/.test(w)) return 'סתם';
+  if(/להרגע|הרגעה/.test(w)) return 'הרגעה';
+  if(/הנעה|התנעה|פתיחת|להתחיל|לפתח/.test(w)) return 'הנעה';
+  if(/פינוק/.test(w)) return 'פינוק';
+  if(/הפסקה/.test(w)) return 'הפסקה';
+  return w.length>16?w.slice(0,16)+'…':w;
+}
+function nWhere(w){
+  if(!w||w==='null') return null;
+  if(/בית.*אוטו|אוטו.*בית/.test(w)) return 'בבית/באוטו';
+  if(/אוטו/.test(w)) return 'באוטו';
+  if(/בבית/.test(w)) return 'בבית';
+  if(/עבודה/.test(w)) return 'בעבודה';
+  if(/קפה/.test(w)) return 'בית קפה';
+  return w.length>12?w.slice(0,12)+'…':w;
+}
+
+function aggregateRows(from,to){
+  const rows=ROWS.filter(r=>r.date>=from&&r.date<=to);
+  const reasons={},places={},hours={};
+  rows.forEach(r=>{
+    if(r.why){const k=nWhy(r.why);if(k)reasons[k]=(reasons[k]||0)+1;}
+    if(r.where){const k=nWhere(r.where);if(k)places[k]=(places[k]||0)+1;}
+    if(r.hour!==null&&r.hour!==undefined){hours[r.hour]=(hours[r.hour]||0)+1;}
+  });
+  return{reasons,places,hours,total:rows.length};
+}
+
+// ── Week chart ────────────────────────────────────────────────────────────────
+function getWeekRange(){
+  const from=toStr(currentWeekStart),to=toStr(addDays(currentWeekStart,6));
+  return{from:from<filterFrom?filterFrom:from,to:to>filterTo?filterTo:to};
+}
+
+function renderWeek(){
+  const labels=[],data=[],colors=[],borders=[];
+  for(let i=0;i<7;i++){
+    const day=addDays(currentWeekStart,i),str=toStr(day);
+    labels.push([DAY_HE[day.getDay()],fmtShort(day)]);
+    const inF=str>=filterFrom&&str<=filterTo;
+    if(!inF){data.push(null);colors.push('rgba(245,166,35,.25)');borders.push('rgba(245,166,35,.5)');}
+    else if(RAW[str]!==undefined){data.push(RAW[str]);colors.push('#3b82f6');borders.push('#2563eb');}
+    else{data.push(0);colors.push('#e5e7eb');borders.push('#d1d5db');}
+  }
+
+  const sunStr=toStr(currentWeekStart),satStr=toStr(addDays(currentWeekStart,6));
+  document.getElementById('weekLabel').textContent=`${fmtShort(toDate(sunStr))} – ${fmtShort(toDate(satStr))}`;
+  document.getElementById('weekTotal').textContent=data.reduce((a,v)=>a+(v||0),0)||'—';
+  const nextEl=document.getElementById('nextWeekLabel');
+  nextEl.textContent=toStr(addDays(currentWeekStart,7))<=filterTo?'לשבוע הבא ›':'';
+
+  if(weekChart){
+    weekChart.data.labels=labels;
+    weekChart.data.datasets[0].data=data;
+    weekChart.data.datasets[0].backgroundColor=colors;
+    weekChart.data.datasets[0].borderColor=borders;
+    weekChart.update();
+  } else {
+    weekChart=new Chart(document.getElementById('weekChart'),{
+      type:'bar',
+      data:{labels,datasets:[{data,backgroundColor:colors,borderColor:borders,borderWidth:1,borderRadius:6,borderSkipped:false,barPercentage:.38,categoryPercentage:.7}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{
+          title:i=>i[0].label,
+          label:item=>{const s=toStr(addDays(currentWeekStart,item.dataIndex));const inF=s>=filterFrom&&s<=filterTo;if(!inF)return 'מחוץ לטווח';if(RAW[s]===undefined)return 'אין נתונים';return `${RAW[s]} סשנים`;}
+        }}},
+        scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f3f4f6'}},x:{ticks:{font:{size:13,weight:'500'},color:'#374151'},grid:{display:false}}},
+        animation:{onComplete(){
+          const chart=this,ctx=chart.ctx,meta=chart.getDatasetMeta(0);
+          ctx.save();
+          meta.data.forEach((bar,i)=>{
+            const val=chart.data.datasets[0].data[i];
+            if(!val) return;
+            ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(59,130,246,.3)';ctx.lineWidth=1;
+            ctx.beginPath();ctx.moveTo(chart.scales.x.left,bar.y);ctx.lineTo(bar.x-bar.width/2-2,bar.y);ctx.stroke();
+            ctx.setLineDash([]);ctx.fillStyle='#111827';ctx.font='bold 15px Heebo,sans-serif';
+            ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(val,bar.x,bar.y-4);
+          });
+          ctx.restore();
+        }}
+      }
+    });
+  }
+
+  const wr=getWeekRange();
+  updateSubCharts(wr.from,wr.to);
+  renderHighDays();
+  renderPatterns();
+}
+
+function prevWeek(){currentWeekStart=addDays(currentWeekStart,-7);renderWeek();}
+function nextWeek(){currentWeekStart=addDays(currentWeekStart,7);renderWeek();}
+
+function updateSubCharts(from,to){
+  const{reasons,places,hours}=aggregateRows(from,to);
+  const lbl=`${fmtShort(toDate(from))}–${fmtShort(toDate(to))}`;
+  document.getElementById('reasonTitle').textContent=`סיבות עיקריות — ${lbl}`;
+  document.getElementById('placeTitle').textContent=`איפה? — ${lbl}`;
+  document.getElementById('hourTitle').textContent=`שעות ביום — ${lbl}`;
+  const rS=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  reasonChart.data.labels=rS.length?rS.map(e=>e[0]):['אין נתונים'];
+  reasonChart.data.datasets[0].data=rS.length?rS.map(e=>e[1]):[0];
+  reasonChart.data.datasets[0].backgroundColor=CHART_COLORS;reasonChart.update();
+  const pS=Object.entries(places).sort((a,b)=>b[1]-a[1]);
+  placeChart.data.labels=pS.length?pS.map(e=>e[0]):['אין נתונים'];
+  placeChart.data.datasets[0].data=pS.length?pS.map(e=>e[1]):[0];
+  placeChart.data.datasets[0].backgroundColor=CHART_COLORS;placeChart.update();
+  const allH=Array.from({length:24},(_,i)=>i);
+  const hVals=allH.map(h=>hours[h]||0);
+  const maxH=Math.max(...hVals,1);
+  hourChart.data.datasets[0].data=hVals;
+  hourChart.data.datasets[0].backgroundColor=hVals.map(v=>{const r=v/maxH;return r===0?'#f3f4f6':r<.3?'#fef9c3':r<.6?'#fde047':r<.85?'#f97316':'#ef4444';});
+  hourChart.update();
+}
+
+function renderHighDays(){
+  const allKeys=Object.keys(RAW).filter(d=>d>=filterFrom&&d<=filterTo);
+  if(!allKeys.length){document.getElementById('highDaySection').innerHTML='';return;}
+  const avg=allKeys.reduce((a,d)=>a+RAW[d],0)/allKeys.length;
+  const wr=getWeekRange();
+  const high=allKeys.filter(d=>d>=wr.from&&d<=wr.to&&RAW[d]>=avg*1.2).sort();
+  if(!high.length){
+    document.getElementById('highDaySection').innerHTML=`<div class="analysis-section"><div class="analysis-title">⚠️ ימים חריגים — מעל 120% מהממוצע</div><p style="font-size:12px;color:#aaa;padding:4px 0">אין ימים חריגים בשבוע זה (ממוצע: ${avg.toFixed(1)})</p></div>`;
+    return;
+  }
+  const cards=high.map(d=>{
+    const count=RAW[d],pct=Math.round((count/avg-1)*100);
+    const dayRows=ROWS.filter(r=>r.date===d);
+    const whys=[...new Set(dayRows.map(r=>nWhy(r.why)).filter(Boolean))].slice(0,3).join(', ');
+    const sits=dayRows.map(r=>r.sit).filter(Boolean).slice(0,1).join('');
+    return `<div class="hcard">
+      <div class="hcard-header"><span class="hcard-date">${fmtShort(toDate(d))}</span><span class="hcard-count">${count}</span></div>
+      <span class="hcard-pct">+${pct}%</span>
+      <div class="hcard-desc">${whys?`סיבות: ${whys}. `:''} ${sits?`"${sits.slice(0,60)}"`:''}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('highDaySection').innerHTML=`<div class="analysis-section"><div class="analysis-title">⚠️ ימים חריגים — מעל 120% מהממוצע (${avg.toFixed(1)})</div><div class="high-day-grid">${cards}</div></div>`;
+}
+
+function renderPatterns(){
+  const wr=getWeekRange();
+  const{reasons,places,hours,total}=aggregateRows(wr.from,wr.to);
+  const wKeys=Object.keys(RAW).filter(d=>d>=wr.from&&d<=wr.to);
+  if(!wKeys.length){document.getElementById('patternSection').innerHTML='';return;}
+  const wAvg=wKeys.reduce((a,d)=>a+RAW[d],0)/wKeys.length;
+  const aKeys=Object.keys(RAW).filter(d=>d>=filterFrom&&d<=filterTo);
+  const pAvg=aKeys.length?aKeys.reduce((a,d)=>a+RAW[d],0)/aKeys.length:wAvg;
+  const topR=Object.entries(reasons).sort((a,b)=>b[1]-a[1])[0];
+  const topP=Object.entries(places).sort((a,b)=>b[1]-a[1])[0];
+  const tH=Object.values(hours).reduce((a,b)=>a+b,0);
+  const nH=[0,1,2,3,22,23].reduce((a,h)=>a+(hours[h]||0),0);
+  const maxH=Object.entries(hours).sort((a,b)=>b[1]-a[1])[0];
+  const vs=((wAvg/pAvg-1)*100).toFixed(0);
+  const pats=[
+    {icon:'📊',cls:'blue',t:'ממוצע שבועי',d:`${wAvg.toFixed(1)} ס׳ ליום — ${vs>0?'+'+vs:vs}% מהממוצע הכולל.`},
+    topR?{icon:'🎯',cls:'purple',t:`סיבה: ${topR[0]}`,d:`${topR[1]} מתוך ${total} (${Math.round(topR[1]/total*100)}%).`}:null,
+    topP?{icon:'📍',cls:'amber',t:`מיקום: ${topP[0]}`,d:`${Math.round(topP[1]/Object.values(places).reduce((a,b)=>a+b,0)*100)}% מהסשנים.`}:null,
+    {icon:'🌙',cls:'rose',t:'עישון לילי',d:`${tH?Math.round(nH/tH*100):0}% בשעות 22–4.`},
+    maxH?{icon:'⏰',cls:'teal',t:'שעת שיא',d:`${maxH[0]}:00 — ${maxH[1]} סשנים.`}:null,
+  ].filter(Boolean);
+  document.getElementById('patternSection').innerHTML=`<div class="analysis-section"><div class="analysis-title">🔍 דפוסי השבוע</div><div class="pattern-grid">${pats.map(p=>`<div class="pcard ${p.cls}"><div class="pcard-icon">${p.icon}</div><div class="pcard-title">${p.t}</div><div class="pcard-desc">${p.d}</div></div>`).join('')}</div></div>`;
+}
+
+function applyFilter(){
+  filterFrom=document.getElementById('dateFrom').value;
+  filterTo=document.getElementById('dateTo').value;
+  if(filterFrom>filterTo)[filterFrom,filterTo]=[filterTo,filterFrom];
+  currentWeekStart=getSunday(toDate(filterFrom));
+  updateCards();renderWeek();
+}
+function resetDates(){
+  filterFrom=ALL_DATES[0];filterTo=ALL_DATES[ALL_DATES.length-1];
+  document.getElementById('dateFrom').value=filterFrom;
+  document.getElementById('dateTo').value=filterTo;
+  currentWeekStart=getSunday(toDate(filterFrom));
+  updateCards();renderWeek();
+}
+function updateCards(){
+  const keys=Object.keys(RAW).filter(d=>d>=filterFrom&&d<=filterTo);
+  const total=keys.reduce((a,d)=>a+RAW[d],0);
+  const avg=keys.length?total/keys.length:0;
+  document.getElementById('avgDay').textContent=avg.toFixed(1);
+  document.getElementById('totalSessions').textContent=total;
+  document.getElementById('totalDays').textContent=keys.length;
+}
+
+function openSummary(){
+  const allKeys=Object.keys(RAW).sort();
+  const total=allKeys.reduce((a,d)=>a+RAW[d],0);
+  const avg=(total/allKeys.length).toFixed(1);
+  const maxDay=allKeys.reduce((a,b)=>RAW[a]>RAW[b]?a:b);
+  const minDay=allKeys.reduce((a,b)=>RAW[a]<RAW[b]?a:b);
+  const weeks=Math.ceil(allKeys.length/7);
+  const{reasons,places,hours}=aggregateRows(allKeys[0],allKeys[allKeys.length-1]);
+  const peakH=Object.entries(hours).sort((a,b)=>b[1]-a[1])[0];
+  const topP=Object.entries(places).sort((a,b)=>b[1]-a[1])[0];
+  const totalP=Object.values(places).reduce((a,b)=>a+b,0);
+  const topR=Object.entries(reasons).sort((a,b)=>b[1]-a[1])[0];
+  const totalR=Object.values(reasons).reduce((a,b)=>a+b,0);
+  const tH=Object.values(hours).reduce((a,b)=>a+b,0);
+  const nH=[0,1,2,3,22,23].reduce((a,h)=>a+(hours[h]||0),0);
+
+  document.getElementById('insightGrid').innerHTML=`
+    <div class="icard blue"><div class="icard-num" style="color:#1d4ed8">${avg}</div><div class="icard-label">ממוצע יומי</div></div>
+    <div class="icard amber"><div class="icard-num" style="color:#92400e">${total}</div><div class="icard-label">סה״כ סשנים</div></div>
+    <div class="icard rose"><div class="icard-num" style="color:#9f1239">${RAW[maxDay]}</div><div class="icard-label">שיא יומי</div><div class="icard-sub">${fmtShort(toDate(maxDay))}</div></div>
+    <div class="icard green"><div class="icard-num" style="color:#166534">${RAW[minDay]}</div><div class="icard-label">מינימום יומי</div><div class="icard-sub">${fmtShort(toDate(minDay))}</div></div>
+    <div class="icard purple"><div class="icard-num" style="color:#6d28d9">${tH?Math.round(nH/tH*100):0}%</div><div class="icard-label">עישון לילי</div></div>
+    <div class="icard teal"><div class="icard-num" style="color:#0f766e">${peakH?peakH[0]+':00':'—'}</div><div class="icard-label">שעת שיא</div></div>`;
+
+  const cis=[];
+  cis.push(`ממוצע <strong>${avg}</strong> ליום ב-${allKeys.length} ימי מעקב.`);
+  if(tH) cis.push(`<strong>${Math.round(nH/tH*100)}%</strong> מהסשנים בשעות לילה (22–4).`);
+  if(topR) cis.push(`הסיבה הדומיננטית: <strong>${topR[0]}</strong> — ${topR[1]} פעמים (${Math.round(topR[1]/totalR*100)}%).`);
+  if(topP) cis.push(`<strong>${Math.round(topP[1]/totalP*100)}%</strong> מהעישון ב${topP[0]}.`);
+  if(peakH) cis.push(`שעת שיא: <strong>${peakH[0]}:00</strong> עם ${peakH[1]} סשנים.`);
+
+  document.getElementById('conclusionBox').innerHTML=`<div class="conclusion-title">🔍 מסקנות ודפוסים</div>${cis.map(c=>`<div class="ci">${c}</div>`).join('')}`;
+  document.getElementById('modalOverlay').classList.add('open');
+
+  setTimeout(()=>{
+    if(mReasonChart)mReasonChart.destroy();
+    const rS=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    mReasonChart=new Chart(document.getElementById('mReasonChart'),{type:'bar',data:{labels:rS.map(e=>e[0]),datasets:[{data:rS.map(e=>e[1]),backgroundColor:CHART_COLORS,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#eee'}},y:{ticks:{font:{size:11}},grid:{display:false}}}}});
+    if(mPlaceChart)mPlaceChart.destroy();
+    const pS=Object.entries(places).sort((a,b)=>b[1]-a[1]);
+    mPlaceChart=new Chart(document.getElementById('mPlaceChart'),{type:'doughnut',data:{labels:pS.map(e=>e[0]),datasets:[{data:pS.map(e=>e[1]),backgroundColor:CHART_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}}}});
+    if(mHourChart)mHourChart.destroy();
+    const aH=Array.from({length:24},(_,i)=>i);
+    const hV=aH.map(h=>hours[h]||0);const mHv=Math.max(...hV,1);
+    mHourChart=new Chart(document.getElementById('mHourChart'),{type:'bar',data:{labels:aH.map(h=>`${h}`),datasets:[{data:hV,backgroundColor:hV.map(v=>{const r=v/mHv;return r===0?'#f3f4f6':r<.3?'#fef9c3':r<.6?'#fde047':r<.85?'#f97316':'#ef4444';}),borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},maxRotation:0},grid:{display:false}},y:{beginAtZero:true,grid:{color:'#eee'}}}}});
+  },60);
+}
+function closeSummary(){document.getElementById('modalOverlay').classList.remove('open');}
+
+function destroyCharts(){
+  [weekChart,reasonChart,placeChart,hourChart].forEach(c=>{if(c)c.destroy();});
+  weekChart=reasonChart=placeChart=hourChart=null;
+}
+function initCharts(){
+  const aH=Array.from({length:24},(_,i)=>i);
+  reasonChart=new Chart(document.getElementById('reasonChart'),{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:CHART_COLORS,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#f3f4f6'}},y:{ticks:{font:{size:12}},grid:{display:false}}}}});
+  placeChart=new Chart(document.getElementById('placeChart'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:CHART_COLORS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12,padding:8,usePointStyle:true}}}}});
+  hourChart=new Chart(document.getElementById('hourChart'),{type:'bar',data:{labels:aH.map(h=>`${h}:00`),datasets:[{data:aH.map(()=>0),backgroundColor:aH.map(()=>'#f3f4f6'),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{display:false}},y:{beginAtZero:true,grid:{color:'#f3f4f6'}}}}});
+}
+
+document.getElementById('urlInput').addEventListener('keydown',e=>{if(e.key==='Enter')loadSheet();});
+</script>
+</body>
+</html>
