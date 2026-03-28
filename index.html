@@ -236,39 +236,45 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 .ci::before{content:'›';position:absolute;right:0;color:#6dbf78;font-size:16px;top:-1px;font-weight:600}
 
 @media(max-width:700px){
-  .dash-topbar{padding:0 14px;height:52px}
-  h1{font-size:15px}
-  .dash-content{padding:12px 14px}
+  .dash-topbar{padding:0 14px;height:48px}
+  h1{font-size:14px}
+  .dash-content{padding:8px 12px}
+  .subtitle{display:none}
   .charts-grid,.mcharts{grid-template-columns:1fr}
-  .insight-grid{grid-template-columns:1fr 1fr}
-  .cards{grid-template-columns:1fr 1fr}
   .chart-box.full,.mchartbox.full{grid-column:1/-1}
-  .card-value{font-size:17px}
-  .stats-bar{padding:7px 12px;gap:6px}
-  .btn.purple{font-size:12px;padding:7px 12px}
-  .url-box{padding:22px 18px}
-  .landing-title{font-size:28px}
 
-  /* Filter row — stack on mobile */
-  .filter-row{flex-direction:column;align-items:stretch;gap:8px;padding:12px 14px}
+  /* Compact stats */
+  .card-value{font-size:15px;letter-spacing:0}
+  .card-label{font-size:8px}
+  .stats-bar{padding:6px 10px;gap:6px;margin-bottom:8px}
+  .btn.purple{font-size:11px;padding:6px 10px}
+
+  /* Filter row — horizontal, compact */
+  .filter-row{flex-direction:row;flex-wrap:nowrap;gap:6px;padding:6px 10px;margin-bottom:8px;overflow-x:auto}
+  .filter-dates{gap:5px;flex-shrink:0}
+  .filter-btns{gap:5px;flex-shrink:0}
   .filter-row label{display:none}
-  .filter-dates{gap:6px}
-  .filter-btns{gap:6px}
-  input[type=date]{min-width:0;flex:1;font-size:14px;padding:10px 12px}
-  .filter-btns .btn{flex:1;padding:9px 6px;font-size:12px;text-align:center}
+  input[type=date]{min-width:0;width:120px;font-size:12px;padding:6px 8px}
+  .filter-btns .btn{padding:6px 10px;font-size:11px;white-space:nowrap}
+
+  /* Week chart fills remaining viewport */
+  #weekChartWrap{height:calc(100dvh - 270px);min-height:140px}
 
   /* Week navigation */
-  .week-header{flex-wrap:wrap;gap:8px}
-  .week-label{font-size:12px;min-width:90px}
-  #nextWeekLabel{font-size:12px;padding:6px 12px;width:100%}
+  .week-header{flex-wrap:nowrap;gap:6px;margin-bottom:10px}
+  .week-title{font-size:10px}
+  .week-label{font-size:11px;min-width:80px}
+  .week-nav button{padding:4px 9px;font-size:13px}
+  #nextWeekLabel{font-size:11px;padding:4px 10px}
+  .legend-row{margin-top:8px;gap:10px;font-size:10px}
 
   /* Modal full-screen */
   .modal-overlay{padding:0;align-items:flex-end}
-  .modal{border-radius:22px 22px 0 0;margin:0;padding:20px 16px 28px;max-height:92vh;overflow-y:auto;width:100%}
-  .modal h2{font-size:16px;margin-bottom:14px}
+  .modal{border-radius:22px 22px 0 0;margin:0;padding:18px 14px 26px;max-height:92vh;overflow-y:auto;width:100%}
+  .modal h2{font-size:15px;margin-bottom:12px}
   .insight-grid{grid-template-columns:repeat(3,1fr);gap:5px}
-  .icard{padding:8px 4px;min-height:64px}
-  .icard-num{font-size:20px}
+  .icard{padding:8px 4px;min-height:60px}
+  .icard-num{font-size:19px}
   .icard-label{font-size:10px}
   .mcharts{grid-template-columns:1fr}
   .mchartbox.full{grid-column:1/-1}
@@ -276,13 +282,15 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
   /* High day cards */
   .high-day-grid{grid-template-columns:1fr}
   .pattern-grid{grid-template-columns:1fr 1fr}
+
+  .url-box{padding:22px 18px}
+  .landing-title{font-size:28px}
 }
 
 @media(max-width:400px){
-  .stats-bar{flex-wrap:nowrap}
-  .insight-grid{grid-template-columns:1fr}
+  input[type=date]{width:100px}
+  .insight-grid{grid-template-columns:1fr 1fr}
   .pattern-grid{grid-template-columns:1fr}
-  .card-value{font-size:40px}
   .url-input-row{flex-direction:column}
   .load-btn{width:100%;padding:13px}
 }
@@ -366,7 +374,7 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
             <span id="nextWeekLabel" onclick="nextWeek()"></span>
           </div>
         </div>
-        <div style="position:relative;height:260px"><canvas id="weekChart"></canvas></div>
+        <div id="weekChartWrap" style="position:relative;height:260px"><canvas id="weekChart"></canvas></div>
         <div class="legend-row">
           <span><span class="legend-dot" style="background:#3d6b4f"></span>יש נתונים</span>
           <span><span class="legend-dot" style="background:#e5e7eb"></span>אין נתונים</span>
