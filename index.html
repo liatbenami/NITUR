@@ -121,20 +121,31 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 .btn.gray:hover{background:var(--surface2);border-color:var(--border)}
 
 /* ── Stat cards ── */
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.cards{display:flex;gap:10px;margin-bottom:16px}
 .card{
-  background:var(--surface);border-radius:var(--r);padding:24px 26px;
+  flex:1;background:var(--surface);border-radius:var(--r-sm);padding:10px 16px;
   box-shadow:var(--shadow);border:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
   position:relative;overflow:hidden;
 }
-.card::after{content:'';position:absolute;top:0;right:0;left:0;height:4px}
-.card.blue::after{background:linear-gradient(90deg,var(--green-mid),var(--green))}
-.card.purple::after{background:linear-gradient(90deg,#9b74cc,var(--purple))}
-.card-label{font-size:10px;color:var(--text3);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
-.card-value{font-size:46px;font-weight:700;line-height:1;letter-spacing:-2.5px}
-.card-sub{font-size:12px;color:var(--text3);margin-top:8px;font-weight:400}
+.card::before{content:'';width:3px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.card.blue::before{background:linear-gradient(180deg,var(--green-mid),var(--green))}
+.card.purple::before{background:linear-gradient(180deg,#9b74cc,var(--purple))}
+.card-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px}
+.card-value{font-size:22px;font-weight:700;line-height:1;letter-spacing:-1px}
+.card-sub{font-size:10px;color:var(--text3);margin-top:1px;font-weight:400}
 .card.blue .card-value{color:var(--green)}
 .card.purple .card-value{color:var(--purple)}
+
+/* ── Scroll hint arrow ── */
+#scrollHint{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  z-index:30;display:flex;flex-direction:column;align-items:center;gap:4px;
+  pointer-events:none;transition:opacity .4s;
+}
+#scrollHint span{font-size:10px;color:var(--text3);font-weight:500;letter-spacing:.5px}
+#scrollHint svg{animation:bounce 1.4s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
 
 /* ── Charts ── */
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -225,9 +236,9 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
   .insight-grid{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
   .chart-box.full,.mchartbox.full{grid-column:1/-1}
-  .card-value{font-size:34px}
-  .card{padding:16px 18px}
-  .card-sub{font-size:11px}
+  .card-value{font-size:20px}
+  .card{padding:9px 14px}
+  .card-sub{font-size:10px}
   .url-box{padding:22px 18px}
   .landing-title{font-size:28px}
 
@@ -258,7 +269,7 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 }
 
 @media(max-width:400px){
-  .cards{grid-template-columns:1fr}
+  .cards{flex-direction:column}
   .insight-grid{grid-template-columns:1fr}
   .pattern-grid{grid-template-columns:1fr}
   .card-value{font-size:40px}
@@ -322,8 +333,8 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
     </div>
 
     <div class="cards">
-      <div class="card blue"><div class="card-label">ממוצע ליום</div><div class="card-value" id="avgDay">—</div><div class="card-sub">בטווח הנבחר</div></div>
-      <div class="card purple"><div class="card-label">סה״כ השבוע</div><div class="card-value" id="weekTotal">—</div><div class="card-sub" id="weekTotalSub">סשנים</div></div>
+      <div class="card blue"><div><div class="card-label">ממוצע ליום</div><div class="card-value" id="avgDay">—</div><div class="card-sub">בטווח הנבחר</div></div></div>
+      <div class="card purple"><div><div class="card-label">סה״כ השבוע</div><div class="card-value" id="weekTotal">—</div><div class="card-sub" id="weekTotalSub">סשנים</div></div></div>
     </div>
 
     <div class="charts-grid">
@@ -351,6 +362,12 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
       <div class="chart-box full"><div class="chart-title" id="hourTitle">שעות ביום</div><div style="position:relative;height:190px"><canvas id="hourChart"></canvas></div></div>
     </div>
   </div>
+</div>
+
+<!-- SCROLL HINT -->
+<div id="scrollHint">
+  <span>עוד נתונים</span>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 </div>
 
 <!-- MODAL -->
@@ -528,6 +545,17 @@ function processCSV(csvText, sourceUrl, silent=false){
     document.getElementById('loadBtn').disabled=false;
     document.getElementById('landingScreen').style.display='none';
     document.getElementById('dashScreen').style.display='block';
+    // Scroll to weekly chart
+    setTimeout(()=>{
+      const chart=document.querySelector('.charts-grid');
+      if(chart) chart.scrollIntoView({behavior:'smooth',block:'start'});
+    },120);
+    // Show scroll hint, hide when user scrolls
+    const hint=document.getElementById('scrollHint');
+    hint.style.opacity='1';
+    const hideHint=()=>{hint.style.opacity='0';window.removeEventListener('scroll',hideHint);};
+    setTimeout(()=>window.addEventListener('scroll',hideHint),800);
+    setTimeout(()=>{hint.style.opacity='0';},4000);
   }
 
   currentWeekStart=getSunday(toDate(filterFrom));
