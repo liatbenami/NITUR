@@ -116,7 +116,7 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 }
 .btn:hover{background:var(--surface2)}
 .btn.primary{background:var(--green);color:#fff;border-color:var(--green)}.btn.primary:hover{background:#326040}
-.btn.purple{background:var(--purple);color:#fff;border-color:var(--purple)}.btn.purple:hover{background:#5b3d84}
+.btn.purple{background:var(--purple);color:#fff;border-color:var(--purple);font-size:13px;font-weight:700;padding:9px 18px;box-shadow:0 3px 10px rgba(109,76,156,.35);letter-spacing:.2px}.btn.purple:hover{background:#5b3d84;box-shadow:0 5px 14px rgba(109,76,156,.45);transform:translateY(-1px)}
 .btn.gray{font-size:12px;color:var(--text3);border-color:transparent;background:transparent}
 .btn.gray:hover{background:var(--surface2);border-color:var(--border)}
 
@@ -208,11 +208,11 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 .modal h2{font-size:18px;font-weight:700;margin-bottom:20px;letter-spacing:-.3px}
 .modal-close{position:absolute;top:18px;left:18px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;color:var(--text2);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:14px}
 .modal-close:hover{background:var(--border);color:var(--text)}
-.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:18px}
 .icard{
-  border-radius:var(--r-sm);padding:12px 10px;border:1px solid;
-  aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  text-align:center;
+  border-radius:10px;padding:10px 6px 9px;border:1px solid;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;min-height:72px;
 }
 .icard.blue{background:var(--green-light);border-color:#b8d5c0}
 .icard.amber{background:var(--amber-light);border-color:#ecc96a}
@@ -220,9 +220,9 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 .icard.green{background:#f0fdf4;border-color:#bbf7d0}
 .icard.purple{background:#f2edfc;border-color:#d4c2ef}
 .icard.teal{background:#f0fdfa;border-color:#99f6e4}
-.icard-num{font-size:26px;font-weight:700;line-height:1;margin-bottom:5px}
-.icard-label{font-size:12px;color:var(--text2);font-weight:600;line-height:1.3}
-.icard-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.icard-num{font-size:24px;font-weight:700;line-height:1;margin-bottom:4px}
+.icard-label{font-size:11px;color:var(--text2);font-weight:600;line-height:1.25}
+.icard-sub{font-size:10px;color:var(--text3);margin-top:2px}
 .mcharts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
 .mchartbox{background:var(--surface2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--border);min-width:0;overflow:hidden}
 .mchartbox.full{grid-column:1/-1}
@@ -263,10 +263,10 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
   .modal-overlay{padding:0;align-items:flex-end}
   .modal{border-radius:22px 22px 0 0;margin:0;padding:20px 16px 28px;max-height:92vh;overflow-y:auto;width:100%}
   .modal h2{font-size:16px;margin-bottom:14px}
-  .insight-grid{grid-template-columns:repeat(3,1fr);gap:6px}
-  .icard{padding:10px 6px}
-  .icard-num{font-size:22px}
-  .icard-label{font-size:11px}
+  .insight-grid{grid-template-columns:repeat(3,1fr);gap:5px}
+  .icard{padding:8px 4px;min-height:64px}
+  .icard-num{font-size:20px}
+  .icard-label{font-size:10px}
   .mcharts{grid-template-columns:1fr}
   .mchartbox.full{grid-column:1/-1}
 
