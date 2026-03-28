@@ -101,6 +101,8 @@ h1{font-size:17px;font-weight:700;letter-spacing:-.3px}
   box-shadow:var(--shadow);border:1px solid var(--border);
 }
 .filter-row label{font-size:12px;color:var(--text3);font-weight:500}
+.filter-dates{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 input[type=date]{
   font-family:'Rubik',sans-serif;font-size:12px;padding:7px 10px;
   border:1px solid var(--border);border-radius:9px;background:var(--surface2);
@@ -216,14 +218,52 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 .ci::before{content:'›';position:absolute;right:0;color:#6dbf78;font-size:16px;top:-1px;font-weight:600}
 
 @media(max-width:700px){
-  .dash-topbar{padding:0 16px}
-  .dash-content{padding:14px 16px}
-  .charts-grid,.mcharts,.insight-grid{grid-template-columns:1fr}
+  .dash-topbar{padding:0 14px;height:52px}
+  h1{font-size:15px}
+  .dash-content{padding:12px 14px}
+  .charts-grid,.mcharts{grid-template-columns:1fr}
+  .insight-grid{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
   .chart-box.full,.mchartbox.full{grid-column:1/-1}
-  .card-value{font-size:36px}
-  .card{padding:18px 20px}
-  .url-box{padding:24px 22px}
+  .card-value{font-size:34px}
+  .card{padding:16px 18px}
+  .card-sub{font-size:11px}
+  .url-box{padding:22px 18px}
+  .landing-title{font-size:28px}
+
+  /* Filter row — stack on mobile */
+  .filter-row{flex-direction:column;align-items:stretch;gap:8px;padding:12px 14px}
+  .filter-row label{display:none}
+  .filter-dates{gap:6px}
+  .filter-btns{gap:6px}
+  input[type=date]{min-width:0;flex:1;font-size:14px;padding:10px 12px}
+  .filter-btns .btn{flex:1;padding:9px 6px;font-size:12px;text-align:center}
+
+  /* Week navigation */
+  .week-header{flex-wrap:wrap;gap:8px}
+  .week-label{font-size:12px;min-width:90px}
+  #nextWeekLabel{font-size:12px;padding:6px 12px;width:100%}
+
+  /* Modal full-screen */
+  .modal-overlay{padding:0}
+  .modal{border-radius:20px 20px 0 0;margin-top:auto;margin-bottom:0;padding:22px 18px 30px;max-height:92vh;overflow-y:auto}
+  .insight-grid{grid-template-columns:1fr 1fr}
+  .icard-num{font-size:18px}
+  .mcharts{grid-template-columns:1fr}
+  .mchartbox.full{grid-column:1/-1}
+
+  /* High day cards */
+  .high-day-grid{grid-template-columns:1fr}
+  .pattern-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:400px){
+  .cards{grid-template-columns:1fr}
+  .insight-grid{grid-template-columns:1fr}
+  .pattern-grid{grid-template-columns:1fr}
+  .card-value{font-size:40px}
+  .url-input-row{flex-direction:column}
+  .load-btn{width:100%;padding:13px}
 }
 </style>
 </head>
@@ -268,13 +308,17 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
     <p class="subtitle" id="dashSubtitle"></p>
 
     <div class="filter-row">
-      <label>מתאריך:</label>
-      <input type="date" id="dateFrom">
-      <label>עד:</label>
-      <input type="date" id="dateTo">
-      <button class="btn primary" onclick="applyFilter()">עדכן</button>
-      <button class="btn" onclick="resetDates()">הכל</button>
-      <button class="btn purple" onclick="openSummary()">📊 סיכום תקופה</button>
+      <div class="filter-dates">
+        <label>מתאריך:</label>
+        <input type="date" id="dateFrom">
+        <label>עד:</label>
+        <input type="date" id="dateTo">
+      </div>
+      <div class="filter-btns">
+        <button class="btn primary" onclick="applyFilter()">עדכן</button>
+        <button class="btn" onclick="resetDates()">הכל</button>
+        <button class="btn purple" onclick="openSummary()">📊 סיכום תקופה</button>
+      </div>
     </div>
 
     <div class="cards">
