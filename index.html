@@ -427,10 +427,10 @@ function processCSV(csvText, sourceUrl){
   parsed.data.forEach(r=>{
     const date=parseDate(r[dateCol]);
     if(!date) return;
-    const qty=parseFloat(r[qtyCol])||1;
-    const why=r[whyCol]||null;
-    const where=r[whereCol]||null;
-    const sit=r[sitCol]||null;
+    const rawQty=r[qtyCol]!=null?String(r[qtyCol]).trim():'';
+    const why=(r[whyCol]&&String(r[whyCol]).trim())||null;
+    const where=(r[whereCol]&&String(r[whereCol]).trim())||null;
+    const sit=(r[sitCol]&&String(r[sitCol]).trim())||null;
     let hour=null;
     if(hourCol&&r[hourCol]){
       const hStr=String(r[hourCol]);
@@ -438,6 +438,9 @@ function processCSV(csvText, sourceUrl){
       if(hm) hour=parseInt(hm[1]);
       else if(/^\d{1,2}$/.test(hStr.trim())) hour=parseInt(hStr);
     }
+    // Skip rows that only have a date with no actual data
+    if(!rawQty&&!why&&!where&&!sit&&hour===null) return;
+    const qty=parseFloat(rawQty)||1;
     ROWS.push({date,qty,why,where,hour,sit});
     RAW[date]=(RAW[date]||0)+qty;
   });
