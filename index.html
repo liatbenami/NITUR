@@ -571,11 +571,8 @@ function processCSV(csvText, sourceUrl, silent=false){
     document.getElementById('loadBtn').disabled=false;
     document.getElementById('landingScreen').style.display='none';
     document.getElementById('dashScreen').style.display='block';
-    // Scroll to weekly chart
-    setTimeout(()=>{
-      const chart=document.querySelector('.charts-grid');
-      if(chart) chart.scrollIntoView({behavior:'smooth',block:'start'});
-    },120);
+    // Scroll to top so everything is visible from the start
+    window.scrollTo({top:0,behavior:'instant'});
     // Show scroll hint, hide when user scrolls
     const hint=document.getElementById('scrollHint');
     hint.style.opacity='1';
