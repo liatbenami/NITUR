@@ -155,8 +155,14 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
 }
 .week-nav button:hover{background:var(--green-light);border-color:var(--green)}
 .week-label{font-size:13px;color:var(--text);font-weight:600;min-width:110px;text-align:center;padding:0 4px}
-#nextWeekLabel{font-size:11px;color:var(--green);font-weight:500;cursor:pointer;min-width:80px;text-align:right;opacity:.75}
-#nextWeekLabel:hover{opacity:1;text-decoration:underline}
+#nextWeekLabel{
+  font-size:13px;font-weight:700;color:var(--green);cursor:pointer;
+  background:var(--green-light);border:2px solid var(--green);
+  border-radius:9px;padding:7px 16px;white-space:nowrap;
+  transition:all .18s;display:inline-block;
+}
+#nextWeekLabel:hover{background:var(--green);color:#fff;transform:translateX(-2px)}
+#nextWeekLabel:empty{display:none}
 .legend-row{display:flex;gap:14px;margin-top:14px;font-size:11px;color:var(--text3);flex-wrap:wrap}
 .legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-left:5px;vertical-align:middle}
 
@@ -578,7 +584,7 @@ function renderWeek(){
         }}},
         scales:{
           y:{display:false,beginAtZero:true},
-          x:{ticks:{font:{size:13,weight:'500',family:'Rubik'},color:'#5c574f'},grid:{display:false},border:{display:false}}
+          x:{reverse:true,ticks:{font:{size:13,weight:'500',family:'Rubik'},color:'#5c574f'},grid:{display:false},border:{display:false}}
         },
         animation:{onComplete(){
           const chart=this,ctx=chart.ctx,meta=chart.getDatasetMeta(0);
