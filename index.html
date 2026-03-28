@@ -333,6 +333,8 @@ let RAW={},ROWS=[],ALL_DATES=[];
 let filterFrom='',filterTo='';
 let currentWeekStart=null;
 let weekChart,reasonChart,placeChart,hourChart,mReasonChart,mPlaceChart,mHourChart;
+let currentCsvUrl='';
+let autoRefreshTimer=null;
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
 function extractSheetId(url){
@@ -352,6 +354,7 @@ async function loadSheet(){
   if(!id){showError('הקישור לא נראה תקין. ודאי שזה קישור Google Sheets');return;}
   const gid=extractGid(raw);
   const csvUrl=`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+  localStorage.setItem('nitur_sheet_url',raw);
   await fetchAndProcess(csvUrl);
 }
 
@@ -362,11 +365,14 @@ function loadDemo(){
 
 function setStep(msg){document.getElementById('loadingStep').textContent=msg;}
 
-async function fetchAndProcess(csvUrl){
-  hideError();
-  document.getElementById('loadingArea').style.display='block';
-  document.getElementById('loadBtn').disabled=true;
-  setStep('מתחבר לגיליון...');
+async function fetchAndProcess(csvUrl, silent=false){
+  currentCsvUrl=csvUrl;
+  if(!silent){
+    hideError();
+    document.getElementById('loadingArea').style.display='block';
+    document.getElementById('loadBtn').disabled=true;
+    setStep('מתחבר לגיליון...');
+  }
 
   const PROXIES=[
     u=>'https://corsproxy.io/?'+encodeURIComponent(u),
@@ -391,25 +397,29 @@ async function fetchAndProcess(csvUrl){
   }
 
   if(!csvText){
-    document.getElementById('loadBtn').disabled=false;
-    document.getElementById('loadingArea').style.display='none';
-    showError('שגיאה בטעינה: '+lastErr+'. ודאי שהגיליון ציבורי ונסי שוב.');
+    if(!silent){
+      document.getElementById('loadBtn').disabled=false;
+      document.getElementById('loadingArea').style.display='none';
+      showError('שגיאה בטעינה: '+lastErr+'. ודאי שהגיליון ציבורי ונסי שוב.');
+    }
     return;
   }
 
-  setStep('מנתח נתונים...');
-  processCSV(csvText, csvUrl);
+  if(!silent) setStep('מנתח נתונים...');
+  processCSV(csvText, csvUrl, silent);
 }
 
 // ── Parse CSV ─────────────────────────────────────────────────────────────────
-function processCSV(csvText, sourceUrl){
+function processCSV(csvText, sourceUrl, silent=false){
   csvText=csvText.replace(/^```[^\n]*\n?/,'').replace(/\n?```$/,'').trim();
 
   const parsed=Papa.parse(csvText,{header:true,skipEmptyLines:true,dynamicTyping:false});
   if(!parsed.data||!parsed.data.length){
-    showError('הגיליון נראה ריק או בפורמט לא מוכר.');
-    document.getElementById('loadBtn').disabled=false;
-    document.getElementById('loadingArea').style.display='none';
+    if(!silent){
+      showError('הגיליון נראה ריק או בפורמט לא מוכר.');
+      document.getElementById('loadBtn').disabled=false;
+      document.getElementById('loadingArea').style.display='none';
+    }
     return;
   }
 
@@ -447,9 +457,11 @@ function processCSV(csvText, sourceUrl){
 
   ALL_DATES=Object.keys(RAW).sort();
   if(!ALL_DATES.length){
-    showError('לא נמצאו נתונים תקינים בגיליון. בדקי שעמודת התאריך מכילה תאריכים.');
-    document.getElementById('loadBtn').disabled=false;
-    document.getElementById('loadingArea').style.display='none';
+    if(!silent){
+      showError('לא נמצאו נתונים תקינים בגיליון. בדקי שעמודת התאריך מכילה תאריכים.');
+      document.getElementById('loadBtn').disabled=false;
+      document.getElementById('loadingArea').style.display='none';
+    }
     return;
   }
 
@@ -467,14 +479,22 @@ function processCSV(csvText, sourceUrl){
   destroyCharts();
   initCharts();
 
-  document.getElementById('loadingArea').style.display='none';
-  document.getElementById('loadBtn').disabled=false;
-  document.getElementById('landingScreen').style.display='none';
-  document.getElementById('dashScreen').style.display='block';
+  if(!silent){
+    document.getElementById('loadingArea').style.display='none';
+    document.getElementById('loadBtn').disabled=false;
+    document.getElementById('landingScreen').style.display='none';
+    document.getElementById('dashScreen').style.display='block';
+  }
 
   currentWeekStart=getSunday(toDate(filterFrom));
   updateCards();
   renderWeek();
+
+  // Auto-refresh every 5 minutes
+  if(!silent){
+    if(autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer=setInterval(()=>fetchAndProcess(currentCsvUrl,true),5*60*1000);
+  }
 }
 
 function parseDate(raw){
@@ -765,6 +785,15 @@ function initCharts(){
 }
 
 document.getElementById('urlInput').addEventListener('keydown',e=>{if(e.key==='Enter')loadSheet();});
+
+// Auto-load saved URL on first visit
+(function(){
+  const saved=localStorage.getItem('nitur_sheet_url');
+  if(saved){
+    document.getElementById('urlInput').value=saved;
+    loadSheet();
+  }
+})();
 </script>
 </body>
 </html>
