@@ -348,8 +348,9 @@ input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3
       <button class="load-btn" id="loadBtn" onclick="loadSheet()">טען ›</button>
     </div>
     <div class="hint-box">
-      <strong>לפני הטעינה:</strong> ודאי שהגיליון ציבורי<br>
-      Google Sheets → Share → Anyone with the link → Viewer
+      <strong>לפני הטעינה — 2 שלבים:</strong><br>
+      1. שיתוף ← גישה כללית ← <strong>כל מי שיש לו קישור</strong> ← סיום<br>
+      2. קובץ ← שתף ← <strong>פרסם לאינטרנט</strong> ← פרסם
     </div>
     <div id="errorMsg"></div>
     <div id="loadingArea">
@@ -498,26 +499,31 @@ async function fetchAndProcess(csvUrl, silent=false){
     setStep('מתחבר לגיליון...');
   }
 
-  const PROXIES=[
-    u=>'https://corsproxy.io/?'+encodeURIComponent(u),
-    u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-    u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
-    u=>'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(u),
-    u=>'https://cors-anywhere.herokuapp.com/'+u,
+  // Build a "published" URL (/pub?output=csv) in addition to the export URL
+  // This works without any proxy for truly public sheets
+  const pubUrl=csvUrl.replace('/export?format=csv','/pub?output=csv');
+
+  const SOURCES=[
+    u=>u,           // direct /pub URL — no proxy, most reliable
+    u=>u.replace('/pub?output=csv','/export?format=csv'), // direct export (sometimes works)
+    u=>'https://corsproxy.io/?'+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
+    u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
+    u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
+    u=>'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
   ];
 
   let csvText='';
   let lastErr='';
 
-  for(const proxy of PROXIES){
+  for(const src of SOURCES){
     try{
-      setStep('שולף נתונים מהגיליון...');
-      const res=await fetch(proxy(csvUrl));
+      if(!silent) setStep('שולף נתונים מהגיליון...');
+      const res=await fetch(src(pubUrl),{signal:AbortSignal.timeout(8000)});
       if(!res.ok) throw new Error('HTTP '+res.status);
       const text=await res.text();
       if(text.includes('Sign in')||text.trim().startsWith('<!DOCTYPE'))
-        throw new Error('הגיליון פרטי — שנה ל-Anyone with the link');
-      if(text.length<10) throw new Error('EMPTY');
+        throw new Error('פרטי');
+      if(text.trim().length<10) throw new Error('EMPTY');
       csvText=text;
       break;
     }catch(e){ lastErr=e.message; }
