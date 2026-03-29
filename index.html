@@ -70,6 +70,43 @@ body{font-family:'Rubik',sans-serif;background:var(--bg);color:var(--text);direc
 .hint-box strong{font-weight:600}
 .demo-btn{font-family:'Rubik',sans-serif;font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:12px;display:block;text-align:center;transition:color .15s}
 .demo-btn:hover{color:var(--green)}
+
+/* ── Guide ── */
+.guide-toggle{font-family:'Rubik',sans-serif;font-size:12px;color:var(--green);background:none;border:none;cursor:pointer;margin-top:16px;display:flex;align-items:center;gap:6px;font-weight:600;transition:opacity .15s;padding:0}
+.guide-toggle:hover{opacity:.75}
+.guide-toggle-arrow{transition:transform .25s;font-size:10px}
+.guide-toggle.open .guide-toggle-arrow{transform:rotate(180deg)}
+.guide-box{display:none;margin-top:14px;text-align:right}
+.guide-box.open{display:block}
+.guide-steps{display:flex;flex-direction:column;gap:14px}
+.gstep{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;overflow:hidden}
+.gstep-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.gstep-num{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gstep-title{font-size:13px;font-weight:700;color:var(--text)}
+/* Mockup: Google Sheets toolbar */
+.mock-sheets{background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;font-size:11px;direction:ltr}
+.mock-toolbar{background:#f8f9fa;border-bottom:1px solid #e0e0e0;padding:7px 12px;display:flex;align-items:center;justify-content:space-between}
+.mock-toolbar-left{display:flex;align-items:center;gap:8px;color:#5f6368}
+.mock-sheet-name{font-weight:500;color:#202124;font-size:12px}
+.mock-share-btn{background:#1a73e8;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:12px;font-weight:500;cursor:default;display:flex;align-items:center;gap:5px}
+.mock-share-arrow{background:#185abc;border-radius:0 4px 4px 0;padding:5px 7px;margin-right:-14px}
+/* Mockup: Share dialog */
+.mock-dialog{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px;font-size:12px;direction:ltr}
+.mock-dialog-title{font-size:14px;font-weight:600;color:#202124;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e0e0e0}
+.mock-section-label{font-size:11px;color:#5f6368;margin-bottom:6px;font-weight:500}
+.mock-access-row{display:flex;align-items:center;justify-content:space-between;background:#f8f9fa;border:1px solid #e0e0e0;border-radius:6px;padding:8px 12px}
+.mock-access-icon{width:28px;height:28px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.mock-access-text{flex:1;margin:0 10px}
+.mock-access-main{font-size:12px;font-weight:500;color:#202124}
+.mock-access-sub{font-size:10px;color:#5f6368}
+.mock-dropdown{background:#fff;border:1px solid #dadce0;border-radius:4px;padding:4px 8px;font-size:11px;color:#202124;display:flex;align-items:center;gap:4px}
+.mock-highlight{background:#e8f5e9;border:2px solid #34a853;border-radius:6px;padding:2px}
+/* Mockup: address bar */
+.mock-browser{background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;direction:ltr}
+.mock-addressbar{background:#f1f3f4;border-bottom:1px solid #e0e0e0;padding:7px 12px;display:flex;align-items:center;gap:8px}
+.mock-url{flex:1;font-size:10px;color:#202124;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fff;border:1px solid #dadce0;border-radius:20px;padding:4px 10px}
+.mock-copy-btn{background:#1a73e8;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:10px;cursor:default;white-space:nowrap}
+.gstep-note{font-size:11px;color:var(--text2);margin-top:8px;line-height:1.6;direction:rtl}
 #errorMsg{font-size:13px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r-sm);padding:12px 15px;margin-top:14px;display:none;line-height:1.55}
 #loadingArea{margin-top:20px;display:none;text-align:center}
 .spinner{width:34px;height:34px;border:3px solid var(--green-light);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
@@ -464,6 +501,9 @@ async function fetchAndProcess(csvUrl, silent=false){
   const PROXIES=[
     u=>'https://corsproxy.io/?'+encodeURIComponent(u),
     u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+    u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
+    u=>'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(u),
+    u=>'https://cors-anywhere.herokuapp.com/'+u,
   ];
 
   let csvText='';
@@ -487,7 +527,12 @@ async function fetchAndProcess(csvUrl, silent=false){
     if(!silent){
       document.getElementById('loadBtn').disabled=false;
       document.getElementById('loadingArea').style.display='none';
-      showError('שגיאה בטעינה: '+lastErr+'. ודאי שהגיליון ציבורי ונסי שוב.');
+      const isPrivate=lastErr.includes('פרטי')||lastErr.includes('Sign in');
+      if(isPrivate){
+        showError('הגיליון נראה פרטי. יש לוודא: Google Sheets ← שיתוף ← גישה כללית ← "כל מי שקיבל את הקישור" ← שמור.');
+      } else {
+        showError('לא הצלחנו לטעון את הגיליון. נסי שוב בעוד רגע — ייתכן שהשרת עמוס. אם הבעיה חוזרת, ודאי שהגיליון ציבורי.');
+      }
     }
     return;
   }
