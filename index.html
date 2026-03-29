@@ -499,17 +499,21 @@ async function fetchAndProcess(csvUrl, silent=false){
     setStep('מתחבר לגיליון...');
   }
 
-  // Build a "published" URL (/pub?output=csv) in addition to the export URL
-  // This works without any proxy for truly public sheets
-  const pubUrl=csvUrl.replace('/export?format=csv','/pub?output=csv');
+  // Extract sheet ID and gid from csvUrl for gviz endpoint
+  const idM=csvUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const sheetId=idM?idM[1]:'';
+  const gidM=csvUrl.match(/gid=(\d+)/);
+  const gid=gidM?gidM[1]:'0';
+  // gviz endpoint: works directly (no proxy) for public sheets, proper CORS headers
+  const gvizUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
 
   const SOURCES=[
-    u=>u,           // direct /pub URL — no proxy, most reliable
-    u=>u.replace('/pub?output=csv','/export?format=csv'), // direct export (sometimes works)
-    u=>'https://corsproxy.io/?'+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
-    u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
-    u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
-    u=>'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(u.replace('/pub?output=csv','/export?format=csv')),
+    ()=>gvizUrl,   // Google's own gviz API — works directly for public sheets, no proxy needed
+    ()=>csvUrl.replace('/export?format=csv','/pub?output=csv'), // pub URL
+    ()=>'https://corsproxy.io/?'+encodeURIComponent(csvUrl),
+    ()=>'https://api.allorigins.win/raw?url='+encodeURIComponent(csvUrl),
+    ()=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(csvUrl),
+    ()=>'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(csvUrl),
   ];
 
   let csvText='';
@@ -518,7 +522,7 @@ async function fetchAndProcess(csvUrl, silent=false){
   for(const src of SOURCES){
     try{
       if(!silent) setStep('שולף נתונים מהגיליון...');
-      const res=await fetch(src(pubUrl),{signal:AbortSignal.timeout(8000)});
+      const res=await fetch(src(),{signal:AbortSignal.timeout(8000)});
       if(!res.ok) throw new Error('HTTP '+res.status);
       const text=await res.text();
       if(text.includes('Sign in')||text.trim().startsWith('<!DOCTYPE'))
