@@ -11,6 +11,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 :root{color-scheme:light only}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#f5f1eb;--surface:#fff;--surface2:#faf7f2;
+    --green:#3d6b4f;--green-mid:#5a8a6a;--green-light:#eaf2ec;
+    --amber:#9a6c1a;--amber-light:#fdf4e0;--purple:#6d4c9c;
+    --text:#18160f;--text2:#5c574f;--text3:#a09890;
+    --border:#e6e0d6;
+    --shadow:0 2px 12px rgba(18,12,4,.07);
+    --shadow-md:0 6px 28px rgba(18,12,4,.1);
+    --shadow-lg:0 16px 56px rgba(18,12,4,.14);
+  }
+  html,body{background:#f5f1eb!important;color:#18160f!important}
+}
 
 :root{
   --bg:#f5f1eb;
